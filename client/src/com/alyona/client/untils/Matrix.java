@@ -1,45 +1,64 @@
 package com.alyona.client.untils;
 
-public class Matrix {
+import java.io.*;
+import java.util.Arrays;
+import java.util.Objects;
+
+public class Matrix implements Serializable {
     private double[][] matrix;
-    private final int n;
-    private final int m;
+    private final int rowsCount;
+    private final int columnsCount;
 
     public Matrix() {
-        this.n = 0;
-        this.m = 0;
+        this.rowsCount = 0;
+        this.columnsCount = 0;
     }
 
-    public Matrix(int n, int m) {
-        this.n = n;
-        this.m = m;
-        this.matrix = new double[n][m];
+    public Matrix(int rowsCount, int columnsCount) {
+        this.rowsCount = rowsCount;
+        this.columnsCount = columnsCount;
+        this.matrix = new double[rowsCount][columnsCount];
     }
 
-    Matrix(double[][] matrix) {
-        this.n = matrix.length;
-        this.m = matrix[0].length;
-        this.matrix = matrix;
+    int getRowsCount() {
+        return rowsCount;
     }
 
-    int getN() {
-        return n;
-    }
-
-    int getM() {
-        return m;
+    int getColumnsCount() {
+        return columnsCount;
     }
 
     double[] getColumn(int i) {
         return this.matrix[i - 1];
     }
 
-    public void setAt(int n, int m, double value) {
-        matrix[n - 1][m - 1] = value;
+    public void setValueAt(int row, int column, double value) {
+        matrix[row][column] = value;
     }
 
-    double getAt(int n, int m) {
-        return matrix[n - 1][m - 1];
+    double getValueAt(int row, int column) {
+        return matrix[row][column];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass() || o.hashCode() != this.hashCode()) {
+            return false;
+        }
+        Matrix compareMatrix = (Matrix) o;
+        return rowsCount == compareMatrix.getRowsCount() &&
+                columnsCount == compareMatrix.getColumnsCount() &&
+                Arrays.equals(matrix, compareMatrix.matrix);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(rowsCount, columnsCount);
+        result = 31 * result + Arrays.hashCode(matrix);
+        return result;
     }
 
     @Override
@@ -48,12 +67,37 @@ public class Matrix {
         StringBuilder stringBuilder1 = new StringBuilder();
         for (double[] rows : matrix) {
             for (double a : rows) {
-                stringBuilder.append(a + ",");
+                stringBuilder.append(a).append(",");
             }
             stringBuilder.replace(stringBuilder.length() - 1, stringBuilder.length(), "");
-            stringBuilder1.append(stringBuilder.toString() + ";\n");
+            stringBuilder1.append(stringBuilder.toString()).append(";\n");
             stringBuilder = new StringBuilder("");
         }
         return stringBuilder1.toString();
+    }
+
+    public static Matrix addMatrix(Matrix a, Matrix b) {
+        if (a.getRowsCount() != b.getColumnsCount() || a.getRowsCount() != b.getRowsCount()) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        var result = new Matrix(a.getRowsCount(), a.getColumnsCount());
+        for (int i = 0; i < a.getRowsCount(); i++) {
+            for (int j = 0; j < b.getColumnsCount(); j++) {
+                double aValue = a.getValueAt(i, j);
+                double bValue = b.getValueAt(i, j);
+                result.setValueAt(i, j, aValue + bValue);
+            }
+        }
+        return result;
+    }
+
+    public static void output(OutputStream outputStream, Matrix matrix) throws IOException {
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+        objectOutputStream.writeObject(matrix);
+    }
+
+    public static Matrix input(InputStream inputStream) throws IOException, ClassNotFoundException {
+        ObjectInputStream objectInput = new ObjectInputStream(inputStream);
+        return (Matrix)objectInput.readObject();
     }
 }
