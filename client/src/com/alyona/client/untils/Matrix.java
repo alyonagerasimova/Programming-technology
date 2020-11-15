@@ -20,11 +20,11 @@ public class Matrix implements Serializable {
         this.matrix = new double[rowsCount][columnsCount];
     }
 
-    int getRowsCount() {
+    public int getRowsCount() {
         return rowsCount;
     }
 
-    int getColumnsCount() {
+    public int getColumnsCount() {
         return columnsCount;
     }
 
@@ -67,10 +67,10 @@ public class Matrix implements Serializable {
         StringBuilder stringBuilder1 = new StringBuilder();
         for (double[] rows : matrix) {
             for (double a : rows) {
-                stringBuilder.append(a).append(",");
+                stringBuilder.append(a).append("\t");
             }
             stringBuilder.replace(stringBuilder.length() - 1, stringBuilder.length(), "");
-            stringBuilder1.append(stringBuilder.toString()).append(";\n");
+            stringBuilder1.append(stringBuilder.toString()).append("\n");
             stringBuilder = new StringBuilder("");
         }
         return stringBuilder1.toString();
@@ -94,6 +94,7 @@ public class Matrix implements Serializable {
     public static void output(OutputStream outputStream, Matrix matrix) throws IOException {
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
         objectOutputStream.writeObject(matrix);
+        objectOutputStream.flush();
     }
 
     public static Matrix input(InputStream inputStream) throws IOException, ClassNotFoundException {
