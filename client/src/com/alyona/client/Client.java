@@ -1,66 +1,89 @@
 package com.alyona.client;
 
-import com.alyona.client.untils.Matrix;
+import com.alyona.lib.untils.Matrix;
+import com.alyona.lib.untils.MatrixStreamHelper;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 
 public class Client {
-    private static Socket clientSocket;
     private static final String IP_ADDRESS = "localhost";
     private static final short PORT = 9070;
 
     public static void main(String[] args) {
-        System.out.println("test");
-        String firstMatrixFileName = "out/firstMatrix";
-        String secondMatrixFileName = "out/secondMatrix";
-        String resultMatrixFileName = "out/resultMatrix";
-
-        System.out.println(Arrays.toString(args));
-
-        Matrix matrix = getRandomMatrix();
-//        try {
-////            FileOutputStream fileOutputStream = new FileOutputStream(secondMatrixFileName);
-////            Matrix.output(fileOutputStream, matrix);
-////            fileOutputStream.close();
-//            FileOutputStream outputStream = new FileOutputStream("C:\\Users\\Username\\Desktop\\save.ser");
-//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-//
-//            FileInputStream fileInputStream = new FileInputStream(secondMatrixFileName);
-//            System.out.println(Matrix.input(fileInputStream));
-//            fileInputStream.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        System.out.println("Start client program");
+        String firstMatrixFileName = args[0];
+        String secondMatrixFileName = args[1];
+        String resultMatrixFileName = args[2];
 
         try {
-            clientSocket = new Socket(IP_ADDRESS, PORT);
-            System.out.println(clientSocket.isConnected());
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-            ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
+            FileInputStream firstFileInputStream = new FileInputStream(firstMatrixFileName);
+            FileInputStream secondFileInputStream = new FileInputStream(secondMatrixFileName);
 
-            objectOutputStream.writeObject(matrix);
+            Matrix firstMatrix = MatrixStreamHelper.input(firstFileInputStream);
+            Matrix secondMatrix = MatrixStreamHelper.input(secondFileInputStream);
 
-            System.out.println(objectInputStream.available());
-            System.out.println(objectInputStream.readObject());
+            firstFileInputStream.close();
+            secondFileInputStream.close();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+            if (firstMatrix == null || secondMatrix == null) {
+                return;
+            }
+
+            Matrix resultMatrix = getMatrixOperationResultFromServer(firstMatrix, secondMatrix);
+            if (resultMatrix == null) {
+                return;
+            }
+
+            FileOutputStream fileOutputStream = new FileOutputStream(resultMatrixFileName);
+            MatrixStreamHelper.output(fileOutputStream, resultMatrix);
+            fileOutputStream.close();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        // вынести матрицу в либу. убрать все что не относится к работе в тесты
+    private static Matrix getMatrixOperationResultFromServer(Matrix firstMatrix, Matrix secondMatrix) {
+        Matrix resultMatrix = null;
+        try (Socket clientSocket = new Socket(IP_ADDRESS, PORT)) {
+            OutputStream outputStream = clientSocket.getOutputStream();
+            MatrixStreamHelper.output(outputStream, firstMatrix);
+            MatrixStreamHelper.output(outputStream, secondMatrix);
+
+            InputStream inputStream = clientSocket.getInputStream();
+            resultMatrix = MatrixStreamHelper.input(inputStream);
+
+            outputStream.close();
+            inputStream.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Server returned matrix:");
+        System.out.println(resultMatrix);
+        return resultMatrix;
     }
 
     private static Matrix getRandomMatrix() {
-        var matrix = new Matrix(5,5);
+        var matrix = new Matrix(5, 5);
         for (int i = 0; i < matrix.getRowsCount(); i++) {
             for (int j = 0; j < matrix.getColumnsCount(); j++) {
                 matrix.setValueAt(i, j, Math.random() * 10);
             }
         }
         return matrix;
+    }
+
+    private static void writeRandomMatrix(String firstMatrixFileName, String secondMatrixFileName) {
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(firstMatrixFileName);
+            FileOutputStream fileOutputStream1 = new FileOutputStream(secondMatrixFileName);
+            MatrixStreamHelper.output(fileOutputStream, getRandomMatrix());
+            MatrixStreamHelper.output(fileOutputStream1, getRandomMatrix());
+            fileOutputStream.close();
+            fileOutputStream1.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
