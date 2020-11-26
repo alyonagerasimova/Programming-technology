@@ -20,6 +20,16 @@ public class Matrix implements Serializable {
         this.matrix = new double[rowsCount][columnsCount];
     }
 
+    public Matrix(double[][] matrix) {
+        this.matrix = matrix;
+        rowsCount = matrix.length;
+        columnsCount = matrix[0].length;
+    }
+
+    public double[][] getArray() {
+        return matrix;
+    }
+
     public int getRowsCount() {
         return rowsCount;
     }
@@ -38,6 +48,21 @@ public class Matrix implements Serializable {
 
     double getValueAt(int row, int column) {
         return matrix[row][column];
+    }
+
+    public static Matrix sumMatrix(Matrix a, Matrix b) {
+        if (a.getRowsCount() != b.getColumnsCount() || a.getRowsCount() != b.getRowsCount()) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        var result = new Matrix(a.getRowsCount(), a.getColumnsCount());
+        for (int i = 0; i < a.getRowsCount(); i++) {
+            for (int j = 0; j < b.getColumnsCount(); j++) {
+                double aValue = a.getValueAt(i, j);
+                double bValue = b.getValueAt(i, j);
+                result.setValueAt(i, j, aValue + bValue);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -74,20 +99,5 @@ public class Matrix implements Serializable {
             stringBuilder = new StringBuilder("");
         }
         return stringBuilder1.toString();
-    }
-
-    public static Matrix sumMatrix(Matrix a, Matrix b) {
-        if (a.getRowsCount() != b.getColumnsCount() || a.getRowsCount() != b.getRowsCount()) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-        var result = new Matrix(a.getRowsCount(), a.getColumnsCount());
-        for (int i = 0; i < a.getRowsCount(); i++) {
-            for (int j = 0; j < b.getColumnsCount(); j++) {
-                double aValue = a.getValueAt(i, j);
-                double bValue = b.getValueAt(i, j);
-                result.setValueAt(i, j, aValue + bValue);
-            }
-        }
-        return result;
     }
 }

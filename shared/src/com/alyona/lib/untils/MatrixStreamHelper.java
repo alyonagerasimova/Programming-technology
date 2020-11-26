@@ -6,14 +6,14 @@ public class MatrixStreamHelper {
     private MatrixStreamHelper() {
     }
 
-    public static void output(OutputStream outputStream, Matrix matrix) throws IOException {
+    public static void write(OutputStream outputStream, Matrix matrix) throws IOException {
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        objectOutputStream.writeObject(matrix);
+        objectOutputStream.writeObject(matrix.getArray());
         objectOutputStream.flush();
     }
 
-    public static Matrix input(InputStream inputStream) throws IOException, ClassNotFoundException {
-            ObjectInputStream objectInput = new ObjectInputStream(inputStream);
-            return (Matrix)objectInput.readObject();
+    public static Matrix read(InputStream inputStream) throws IOException, ClassNotFoundException {
+        ObjectInputStream objectInput = new ObjectInputStream(inputStream);
+        return new Matrix((double[][])objectInput.readObject());
     }
 }

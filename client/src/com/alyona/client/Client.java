@@ -17,30 +17,37 @@ public class Client {
         String resultMatrixFileName = args[2];
 
         try {
+        //  writeRandomMatrix(firstMatrixFileName, secondMatrixFileName); // If file should be create
+
             FileInputStream firstFileInputStream = new FileInputStream(firstMatrixFileName);
             FileInputStream secondFileInputStream = new FileInputStream(secondMatrixFileName);
 
-            Matrix firstMatrix = MatrixStreamHelper.input(firstFileInputStream);
-            Matrix secondMatrix = MatrixStreamHelper.input(secondFileInputStream);
+            Matrix firstMatrix = MatrixStreamHelper.read(firstFileInputStream);
+            Matrix secondMatrix = MatrixStreamHelper.read(secondFileInputStream);
 
             firstFileInputStream.close();
             secondFileInputStream.close();
 
-            if (firstMatrix == null || secondMatrix == null) {
-                return;
-            }
-
             Matrix resultMatrix = getMatrixOperationResultFromServer(firstMatrix, secondMatrix);
-            if (resultMatrix == null) {
-                return;
-            }
 
             FileOutputStream fileOutputStream = new FileOutputStream(resultMatrixFileName);
-            MatrixStreamHelper.output(fileOutputStream, resultMatrix);
+            if (resultMatrix == null) {
+                fileOutputStream.write("Ошибка в расчетах".getBytes());// Запись в файл ошибки расчета
+            } else {
+                MatrixStreamHelper.write(fileOutputStream, resultMatrix);
+            }
             fileOutputStream.close();
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (java.util.NoSuchElementException | java.lang.NumberFormatException ex) {
+            System.err.println("Wrong file format");
+        } catch (ClassNotFoundException ex) {
+            System.err.println("Input files not found");
+        }
+        catch(EOFException eof){
+            System.err.println("End of file or end of stream has been reached unexpectedly");
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -48,17 +55,18 @@ public class Client {
         Matrix resultMatrix = null;
         try (Socket clientSocket = new Socket(IP_ADDRESS, PORT)) {
             OutputStream outputStream = clientSocket.getOutputStream();
-            MatrixStreamHelper.output(outputStream, firstMatrix);
-            MatrixStreamHelper.output(outputStream, secondMatrix);
+            MatrixStreamHelper.write(outputStream, firstMatrix);
+            MatrixStreamHelper.write(outputStream, secondMatrix);
 
             InputStream inputStream = clientSocket.getInputStream();
-            resultMatrix = MatrixStreamHelper.input(inputStream);
+            resultMatrix = MatrixStreamHelper.read(inputStream);
 
             outputStream.close();
             inputStream.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+
         System.out.println("Server returned matrix:");
         System.out.println(resultMatrix);
         return resultMatrix;
@@ -78,8 +86,8 @@ public class Client {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(firstMatrixFileName);
             FileOutputStream fileOutputStream1 = new FileOutputStream(secondMatrixFileName);
-            MatrixStreamHelper.output(fileOutputStream, getRandomMatrix());
-            MatrixStreamHelper.output(fileOutputStream1, getRandomMatrix());
+            MatrixStreamHelper.write(fileOutputStream, getRandomMatrix());
+            MatrixStreamHelper.write(fileOutputStream1, getRandomMatrix());
             fileOutputStream.close();
             fileOutputStream1.close();
         } catch (IOException e) {

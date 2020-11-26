@@ -15,23 +15,21 @@ public class Server {
         try (ServerSocket server = new ServerSocket(PORT)) {
             while (!server.isClosed()) {
                 Socket client = server.accept();
-                Thread clientThread = new Thread(getRunnableMatrixTask(client));
-                clientThread.start();
+                runMatrixTask(client);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static Runnable getRunnableMatrixTask(Socket clientConnection) {
-        return () -> {
+    public static void runMatrixTask(Socket clientConnection) {
             try {
                 System.out.println("Client connected");
-                Matrix firstMatrix = MatrixStreamHelper.input(clientConnection.getInputStream());
-                Matrix secondMatrix = MatrixStreamHelper.input(clientConnection.getInputStream());
+                Matrix firstMatrix = MatrixStreamHelper.read(clientConnection.getInputStream());
+                Matrix secondMatrix = MatrixStreamHelper.read(clientConnection.getInputStream());
 
                 Matrix resultMatrix = Matrix.sumMatrix(firstMatrix, secondMatrix);
-                MatrixStreamHelper.output(clientConnection.getOutputStream(), resultMatrix);
+                MatrixStreamHelper.write(clientConnection.getOutputStream(), resultMatrix);
 
                 clientConnection.close();
 
@@ -39,7 +37,6 @@ public class Server {
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
-        };
     }
 }
 
